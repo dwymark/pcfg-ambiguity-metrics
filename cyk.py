@@ -22,7 +22,7 @@ def CYK(pcfg, words, numparses=1):
           for t2 in chart[i-(k+1)][k+1]:
             for prod in pcfg.productions(rhs=t1[0].lhs()):
               if t2[0].lhs() in prod.rhs():
-                  li.append((prod,p.prob() * t1[1] * t2[1],((k,j),(i-k,j+1+k))))
+                  li.append((prod,prod.prob() * t1[1] * t2[1],((k,j),(i-k,j+1+k))))
         chart[i].append(li)
   
   return chart[numwords-1][0]
@@ -33,4 +33,5 @@ if __name__ == '__main__':
   A -> A A [.6] | A B [.2] | 'a' [.2]
   B -> B A [.3] | A B [.2] | 'b' [.5]
   """)
-  print(CYK(toy_pcfg,['a','b','a']))
+  for top in sorted(CYK(toy_pcfg,['a','b','a']), key=lambda x : x[1], reverse=True):
+    print(top)
