@@ -25,7 +25,7 @@ def CYK(pcfg, words, numparses=1):
                   li.append((prod,p.prob() * t1[1] * t2[1],((k,j),(i-k,j+1+k))))
         chart[i].append(li)
   
-#  return top n parses
+  return chart[numwords-1][0]
 
 if __name__ == '__main__':
   toy_pcfg = PCFG.fromstring("""
