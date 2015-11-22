@@ -4,26 +4,33 @@
 # words : list(strings)
 def CYK(pcfg, words, numparses=1):
   numwords = len(words)
-  chart = [[]]
+  chart = [[]]                # each [row][col] is a list of production tuples
+  #[ row0:[ col0:[(prod1),(prod2),(prod3)] , col1:[(prod4),(prod5),(prod6)] ], row1:[ col0:[(p1),(p2)] , col1:[(p3)] ] ]
+  i = 0
   for w in words:
+    chart[0].append([])       # create the new column
     prods = pcfg.productions(rhs=w)
     li = []
     for p in prods:
       # Tuples go into every slot in chart with (production, probability, backpointer)
       li.append((p,p.prob(),0))
-    chart[0].append(li)
+    chart[0][i].extend(li)
+    i += 1
   
-  for i in range(1,numwords):
-    chart.append([])
-    for j in range(numwords):
-      for k in range(i):
+  for i in range(1,numwords):   # length of the span and level of chart
+    chart.append([])            # create the new row
+    for j in range(numwords-i): # current slot [i,j] in the chart we are evaluating
+      chart[i].append([])       # create the new column
+      for k in range(i):        # used to increment through all sub-lengths when comparing previous slots of productions
         li = []
-        for t1 in chart[k][0]:
-          for t2 in chart[i-(k+1)][k+1]:
-            for prod in pcfg.productions(rhs=t1[0].lhs()):
-              if t2[0].lhs() in prod.rhs():
-                  li.append((prod,prod.prob() * t1[1] * t2[1],((k,j),(i-k,j+1+k))))
-        chart[i].append(li)
+        # iterate through all productions in each slot of [k,j] and those in [i-(k+1),j+k+1]
+        for t1 in chart[k][j]:
+          for t2 in chart[i-(k+1)][j+k+1]:
+            # check if the productions can be derived from the one parent production
+            for prod in pcfg.productions(rhs=t1[0].lhs()): # X -> (t1[0], t2[0])
+              if t2[0].lhs() == prod.rhs()[1]:
+                  li.append((prod,prod.prob() * t1[1] * t2[1],((k,j),(i-(k+1),j+k+1))))
+        chart[i][j].extend(li)
   
   return chart[numwords-1][0]
 
