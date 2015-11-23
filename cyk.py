@@ -1,4 +1,5 @@
 ﻿from nltk.grammar import PCFG
+from nltk.tree import Tree
 
 # PCFG : nltk.grammar.pcfg
 # words : list(strings)
@@ -24,14 +25,33 @@ def CYK(pcfg, words, numparses=1):
       for k in range(i):        # used to increment through all sub-lengths when comparing previous slots of productions
         li = []
         # iterate through all productions in each slot of [k,j] and those in [i-(k+1),j+k+1]
-        for ii in range(len(chart[k][0])):
+        for ii in range(len(chart[k][j])):
           for jj in range(len(chart[i-(k+1)][k+(j+1)])):
-            for prod in pcfg.productions(rhs=chart[k][0][ii][0].lhs()):
-              if chart[i-(k+1)][k+(j+1)][jj][0].lhs() == prod.rhs()[1]:
-                li.append((prod,prod.prob() * chart[k][0][ii][1] * chart[i-(k+1)][k+(j+1)][jj][1],((k,0,ii),(i-(k+1),k+(j+1),jj))))
+            for prod in pcfg.productions(rhs=chart[k][j][ii][0].lhs()):
+              if chart[k][j][ii][0].lhs() == prod.rhs()[0] and chart[i-(k+1)][k+(j+1)][jj][0].lhs() == prod.rhs()[1]:
+                li.append((prod,prod.prob() * chart[k][j][ii][1] * chart[i-(k+1)][k+(j+1)][jj][1],((k,j,ii),(i-(k+1),k+(j+1),jj))))
         chart[i][j].extend(li)
-  
-  return chart[numwords-1][0]
+  return trees_from_chart(chart,numparses)
+
+def trees_from_chart(chart, numparses):
+  starting_nodes = sorted(chart[len(chart)-1][0], key=lambda x : x[1], reverse=True)
+  trees = []
+  for i in range(numparses):
+    li = []
+    buildtree(chart,li,starting_nodes[i])
+    print("".join(li))
+    trees.append(Tree.fromstring("".join(li)))
+  return trees
+
+def buildtree(chart,li,tup):
+  if tup[2] != 0:
+    li.append('(' + str(tup[0].lhs()))
+    buildtree(chart,li,chart[tup[2][0][0]][tup[2][0][1]][tup[2][0][2]])
+    li.append(' ')
+    buildtree(chart,li,chart[tup[2][1][0]][tup[2][1][1]][tup[2][1][2]])
+    li.append(')')
+  else:
+    li.append('(' + str(tup[0].lhs()) + ' ' + str(tup[0].rhs()[0]) + ')')
 
 if __name__ == '__main__':
   toy_pcfg = PCFG.fromstring("""
@@ -39,5 +59,4 @@ if __name__ == '__main__':
   A -> A A [.6] | A B [.2] | 'a' [.2]
   B -> B A [.3] | A B [.2] | 'b' [.5]
   """)
-  for top in sorted(CYK(toy_pcfg,['a','b','a']), key=lambda x : x[1], reverse=True):
-    print(top)
+  CYK(toy_pcfg,"a b a".split(" "))[0].draw()
