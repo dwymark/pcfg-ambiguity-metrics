@@ -24,12 +24,11 @@ def CYK(pcfg, words, numparses=1):
       for k in range(i):        # used to increment through all sub-lengths when comparing previous slots of productions
         li = []
         # iterate through all productions in each slot of [k,j] and those in [i-(k+1),j+k+1]
-        for t1 in chart[k][j]:
-          for t2 in chart[i-(k+1)][j+k+1]:
-            # check if the productions can be derived from the one parent production
-            for prod in pcfg.productions(rhs=t1[0].lhs()): # X -> (t1[0], t2[0])
-              if t2[0].lhs() == prod.rhs()[1]:
-                  li.append((prod,prod.prob() * t1[1] * t2[1],((k,j),(i-(k+1),j+k+1))))
+        for ii in range(len(chart[k][0])):
+          for jj in range(len(chart[i-(k+1)][k+(j+1)])):
+            for prod in pcfg.productions(rhs=chart[k][0][ii][0].lhs()):
+              if chart[i-(k+1)][k+(j+1)][jj][0].lhs() == prod.rhs()[1]:
+                li.append((prod,prod.prob() * chart[k][0][ii][1] * chart[i-(k+1)][k+(j+1)][jj][1],((k,0,ii),(i-(k+1),k+(j+1),jj))))
         chart[i][j].extend(li)
   
   return chart[numwords-1][0]
