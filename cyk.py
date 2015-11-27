@@ -1,5 +1,6 @@
 ﻿from nltk.grammar import PCFG
 from nltk.tree import Tree
+import main
 
 # PCFG : nltk.grammar.pcfg
 # words : list(strings)
@@ -28,7 +29,7 @@ def CYK(pcfg, words, numparses=1):
         for ii in range(len(chart[k][j])):
           for jj in range(len(chart[i-(k+1)][k+(j+1)])):
             for prod in pcfg.productions(rhs=chart[k][j][ii][0].lhs()):
-              if chart[k][j][ii][0].lhs() == prod.rhs()[0] and chart[i-(k+1)][k+(j+1)][jj][0].lhs() == prod.rhs()[1]:
+              if chart[i-(k+1)][k+(j+1)][jj][0].lhs() == prod.rhs()[1]:
                 li.append((prod,prod.prob() * chart[k][j][ii][1] * chart[i-(k+1)][k+(j+1)][jj][1],((k,j,ii),(i-(k+1),k+(j+1),jj))))
         chart[i][j].extend(li)
   return trees_from_chart(chart,numparses)
@@ -53,10 +54,18 @@ def buildtree(chart,li,tup):
   else:
     li.append('(' + str(tup[0].lhs()) + ' ' + str(tup[0].rhs()[0]) + ')')
 
-if __name__ == '__main__':
+def test1(test_str):
   toy_pcfg = PCFG.fromstring("""
   S -> A A [0.8] | A B [.1] | A S [.1]
   A -> A A [.6] | A B [.2] | 'a' [.2]
   B -> B A [.3] | A B [.2] | 'b' [.5]
   """)
-  CYK(toy_pcfg,"a b a".split(" "))[0].draw()
+  for t in CYK(toy_pcfg,test_str.split(" "),5):
+    t.draw()
+
+def test2():
+  pcfg = main.trained_pcfg()
+  CYK(pcfg,"He crossed the road".split(" "))[0].draw()
+
+if __name__ == '__main__':
+  test1("a a a a a a a a a a")
