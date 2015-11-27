@@ -69,3 +69,4 @@ def test2():
 
 if __name__ == '__main__':
   test1("a a a a a a a a a a")
+  CYK(toy_pcfg,"a b a".split(" "))[0].draw()
