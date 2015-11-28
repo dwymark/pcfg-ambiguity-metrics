@@ -3,16 +3,16 @@ import nltk.grammar as grammar
 from nltk.corpus import treebank
 from nltk.treetransforms import chomsky_normal_form, collapse_unary
 
+import pickle
+
 def trained_pcfg():
-   try:
-     f = open("doesntexist.txt",'r')
-     print("Loading the PCFG...")
-     gram = grammar.PCFG.fromstring(f.read())
-     f.close()
-     print("Loaded!")
-     return gram
-   except FileNotFoundError:
-    f = open("pcfgcache.txt",'w')
+  try:
+    with open("pcfgcache.pkl",'rb') as input:
+      print("Loading the PCFG...")
+      gram = pickle.load(input)
+    print("Loaded!")
+    return gram
+  except FileNotFoundError:
     print("Training the PCFG...")
     productions = []
     for t in treebank.parsed_sents():
@@ -22,10 +22,11 @@ def trained_pcfg():
       for p in t.productions():
         productions.append(p)
     gram = grammar.induce_pcfg(grammar.Nonterminal('S'), productions)
-    for production in gram.productions():
-      f.write(production.__str__() + '\n')
-    f.close()
     print("Trained!")
+    print("Writing the PCFG...")
+    with open("pcfgcache.pkl",'wb') as output:
+      pickle.dump(gram, output, -1)
+    print("Write successful!")
     return gram
 
 if __name__ == '__main__':
