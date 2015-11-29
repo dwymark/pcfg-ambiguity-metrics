@@ -1,3 +1,5 @@
 .vs/pcfg-ambiguity-metrics/v14/.suo
 pcfg-ambiguity-metrics.pyproj
 *.sln
+pcfgcache.pkl
+*.pyc

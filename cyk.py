@@ -65,8 +65,8 @@ def test1(test_str):
 
 def test2():
   pcfg = main.trained_pcfg()
-  CYK(pcfg,"He crossed the road".split(" "))[0].draw()
+  for t in CYK(pcfg,"He crossed the road".split(" "),2):
+    t.draw()
 
 if __name__ == '__main__':
-  test1("a a a a a a a a a a")
-  CYK(toy_pcfg,"a b a".split(" "))[0].draw()
+  test2()
