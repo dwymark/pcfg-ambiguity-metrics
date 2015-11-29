@@ -18,7 +18,7 @@ def trained_pcfg():
     # Search for nltk_data/corpora/ptb and place all the wsj/XX/*.mrg files in 
     useFullTreeBank = True
     if useFullTreeBank:
-      for index in ptb.parsed_sents(): # TODO: Not returning list
+      for t in ptb.parsed_sents(): # TODO: Not returning list
         collapse_unary(t,True)
         chomsky_normal_form(t)
         #t.draw()
