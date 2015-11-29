@@ -1,6 +1,6 @@
-﻿#!python3
+#!python3
 import nltk.grammar as grammar
-from nltk.corpus import treebank
+from nltk.corpus import treebank, ptb
 from nltk.treetransforms import chomsky_normal_form, collapse_unary
 
 import pickle
@@ -15,12 +15,22 @@ def trained_pcfg():
   except FileNotFoundError:
     print("Training the PCFG...")
     productions = []
-    for t in treebank.parsed_sents():
-      collapse_unary(t,True)
-      chomsky_normal_form(t)
-      #t.draw()
-      for p in t.productions():
-        productions.append(p)
+    # Search for nltk_data/corpora/ptb and place all the wsj/XX/*.mrg files in 
+    useFullTreeBank = True
+    if useFullTreeBank:
+      for index in ptb.parsed_sents(): # TODO: Not returning list
+        collapse_unary(t,True)
+        chomsky_normal_form(t)
+        #t.draw()
+        for p in t.productions():
+          productions.append(p)  
+    else:
+      for t in treebank.parsed_sents():
+        collapse_unary(t,True)
+        chomsky_normal_form(t)
+        #t.draw()
+        for p in t.productions():
+          productions.append(p)
     gram = grammar.induce_pcfg(grammar.Nonterminal('S'), productions)
     print("Trained!")
     print("Writing the PCFG...")
