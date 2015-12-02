@@ -1,7 +1,9 @@
 #!python3
 import nltk.grammar as grammar
-from nltk.corpus import treebank, ptb
+from nltk.corpus import treebank
 from nltk.treetransforms import chomsky_normal_form, collapse_unary
+from nltk.corpus.util import LazyCorpusLoader
+from nltk.corpus.reader.bracket_parse import CategorizedBracketParseCorpusReader
 
 import pickle
 
@@ -14,11 +16,14 @@ def trained_pcfg():
     return gram
   except FileNotFoundError:
     print("Training the PCFG...")
+    ptb = LazyCorpusLoader( # Penn Treebank v3: WSJ 
+    'ptb', CategorizedBracketParseCorpusReader, r'wsj/\d\d/wsj_\d\d\d\d.mrg',
+    cat_file='allcats.txt', tagset='wsj')
     productions = []
     # Search for nltk_data/corpora/ptb and place all the wsj/XX/*.mrg files in 
     useFullTreeBank = True
     if useFullTreeBank:
-      for t in ptb.parsed_sents(): # TODO: Not returning list
+      for t in ptb.parsed_sents(): 
         collapse_unary(t,True)
         chomsky_normal_form(t)
         #t.draw()
