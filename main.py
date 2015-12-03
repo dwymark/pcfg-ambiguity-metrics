@@ -1,5 +1,5 @@
-#!python3
-import nltk.grammar as grammar
+﻿#!python3
+import grammar
 from nltk.corpus import treebank
 from nltk.treetransforms import chomsky_normal_form, collapse_unary
 from nltk.corpus.util import LazyCorpusLoader
@@ -22,18 +22,21 @@ def trained_pcfg():
     productions = []
     # Search for nltk_data/corpora/ptb and place all the wsj/XX/*.mrg files in 
     useFullTreeBank = True
+    n = 0
     if useFullTreeBank:
       for t in ptb.parsed_sents(): 
+        if n % 200 == 0:
+          print(n)
         collapse_unary(t,True)
         chomsky_normal_form(t)
         #t.draw()
+        n = n + 1
         for p in t.productions():
-          productions.append(p)  
+          productions.append(p)
     else:
       for t in treebank.parsed_sents():
         collapse_unary(t,True)
         chomsky_normal_form(t)
-        #t.draw()
         for p in t.productions():
           productions.append(p)
     gram = grammar.induce_pcfg(grammar.Nonterminal('S'), productions)
