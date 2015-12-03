@@ -1,5 +1,7 @@
 ﻿from nltk.grammar import PCFG
 from nltk.tree import Tree
+from nltk.draw import draw_trees
+from nltk.treetransforms import un_chomsky_normal_form
 import main
 
 # PCFG : nltk.grammar.pcfg
@@ -29,19 +31,27 @@ def CYK(pcfg, words, numparses=1):
         for ii in range(len(chart[k][j])):
           for jj in range(len(chart[i-(k+1)][k+(j+1)])):
             for prod in pcfg.productions(rhs=chart[k][j][ii][0].lhs()):
-              if chart[i-(k+1)][k+(j+1)][jj][0].lhs() == prod.rhs()[1]:
+              if len(prod.rhs()) == 2 and chart[i-(k+1)][k+(j+1)][jj][0].lhs() == prod.rhs()[1]:
                 li.append((prod,prod.prob() * chart[k][j][ii][1] * chart[i-(k+1)][k+(j+1)][jj][1],((k,j,ii),(i-(k+1),k+(j+1),jj))))
         chart[i][j].extend(li)
   return trees_from_chart(chart,numparses)
 
+# Returns a list of tuples (TREE, PROBABILITY)
 def trees_from_chart(chart, numparses):
-  starting_nodes = sorted(chart[len(chart)-1][0], key=lambda x : x[1], reverse=True)
+  roots = sorted(chart[len(chart)-1][0], key=lambda x : x[1], reverse=True)
   trees = []
+
+  if numparses > len(roots) or numparses < 1:
+    numparses = len(roots)
+  if len(roots) == 0:
+    print("No parses found.")
+    return 0
+
   for i in range(numparses):
     li = []
-    buildtree(chart,li,starting_nodes[i])
+    buildtree(chart,li,roots[i])
     print("".join(li))
-    trees.append(Tree.fromstring("".join(li)))
+    trees.append((Tree.fromstring("".join(li)), roots[i][1]))
   return trees
 
 def buildtree(chart,li,tup):
@@ -65,8 +75,15 @@ def test1(test_str):
 
 def test2():
   pcfg = main.trained_pcfg()
-  for t in CYK(pcfg,"He crossed the road".split(" "),2):
-    t.draw()
+  return pcfg
+
+def print_trees(li):
+  # assumes list of tuples of form (TREE, PROBABILITY)
+  n = 1
+  for tup in li:
+    print("Tree " + str(n) + ": " + str(tup[1]))
+    n = n + 1
+  draw_trees(*[x[0] for x in li])
 
 if __name__ == '__main__':
-  test2()
+  pcfg = test2()

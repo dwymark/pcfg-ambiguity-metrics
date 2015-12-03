@@ -1,7 +1,9 @@
 ﻿#!python3
-import nltk.grammar as grammar
+import grammar
 from nltk.corpus import treebank
 from nltk.treetransforms import chomsky_normal_form, collapse_unary
+from nltk.corpus.util import LazyCorpusLoader
+from nltk.corpus.reader.bracket_parse import CategorizedBracketParseCorpusReader
 
 import pickle
 
@@ -14,13 +16,29 @@ def trained_pcfg():
     return gram
   except FileNotFoundError:
     print("Training the PCFG...")
+    ptb = LazyCorpusLoader( # Penn Treebank v3: WSJ 
+    'ptb', CategorizedBracketParseCorpusReader, r'wsj/\d\d/wsj_\d\d\d\d.mrg',
+    cat_file='allcats.txt', tagset='wsj')
     productions = []
-    for t in treebank.parsed_sents():
-      collapse_unary(t,True)
-      chomsky_normal_form(t)
-      #t.draw()
-      for p in t.productions():
-        productions.append(p)
+    # Search for nltk_data/corpora/ptb and place all the wsj/XX/*.mrg files in 
+    useFullTreeBank = True
+    n = 0
+    if useFullTreeBank:
+      for t in ptb.parsed_sents(): 
+        if n % 200 == 0:
+          print(n)
+        collapse_unary(t,True)
+        chomsky_normal_form(t)
+        #t.draw()
+        n = n + 1
+        for p in t.productions():
+          productions.append(p)
+    else:
+      for t in treebank.parsed_sents():
+        collapse_unary(t,True)
+        chomsky_normal_form(t)
+        for p in t.productions():
+          productions.append(p)
     gram = grammar.induce_pcfg(grammar.Nonterminal('S'), productions)
     print("Trained!")
     print("Writing the PCFG...")
