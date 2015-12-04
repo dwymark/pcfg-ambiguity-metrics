@@ -20,25 +20,20 @@ def trained_pcfg():
     'ptb', CategorizedBracketParseCorpusReader, r'wsj/\d\d/wsj_\d\d\d\d.mrg',
     cat_file='allcats.txt', tagset='wsj')
     productions = []
+    tb = treebank
     # Search for nltk_data/corpora/ptb and place all the wsj/XX/*.mrg files in 
     useFullTreeBank = True
-    n = 0
+    n = 0                   # check progress of training
     if useFullTreeBank:
-      for t in ptb.parsed_sents(): 
-        if n % 200 == 0:
-          print(n)
-        collapse_unary(t,True)
-        chomsky_normal_form(t)
-        #t.draw()
-        n = n + 1
-        for p in t.productions():
-          productions.append(p)
-    else:
-      for t in treebank.parsed_sents():
-        collapse_unary(t,True)
-        chomsky_normal_form(t)
-        for p in t.productions():
-          productions.append(p)
+      tb = ptb
+    for t in tb.parsed_sents(): 
+      if n % 200 == 0:
+        print(n)
+      collapse_unary(t,True)
+      chomsky_normal_form(t)
+      n = n + 1
+      for p in t.productions():
+        productions.append(p)
     gram = grammar.induce_pcfg(grammar.Nonterminal('S'), productions)
     print("Trained!")
     print("Writing the PCFG...")

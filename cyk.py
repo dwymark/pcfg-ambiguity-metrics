@@ -2,6 +2,7 @@
 from nltk.tree import Tree
 from nltk.draw import draw_trees
 from nltk.treetransforms import un_chomsky_normal_form
+import time
 import main
 
 # PCFG : nltk.grammar.pcfg
@@ -28,11 +29,18 @@ def CYK(pcfg, words, numparses=1):
       for k in range(i):        # used to increment through all sub-lengths when comparing previous slots of productions
         li = []
         # iterate through all productions in each slot of [k,j] and those in [i-(k+1),j+k+1]
-        for ii in range(len(chart[k][j])):
-          for jj in range(len(chart[i-(k+1)][k+(j+1)])):
-            for prod in pcfg.productions(rhs=chart[k][j][ii][0].lhs()):
-              if len(prod.rhs()) == 2 and chart[i-(k+1)][k+(j+1)][jj][0].lhs() == prod.rhs()[1]:
-                li.append((prod,prod.prob() * chart[k][j][ii][1] * chart[i-(k+1)][k+(j+1)][jj][1],((k,j,ii),(i-(k+1),k+(j+1),jj))))
+        slot1 = chart[k][j]
+        slot2 = chart[i-(k+1)][k+(j+1)]
+        for ii in range(len(slot1)):
+          bp1 = (k,j,ii)
+          slot1_prod = slot1[ii]
+          for jj in range(len(slot2)):
+            bp2 = (i-(k+1),k+(j+1),jj)
+            slot2_prod = slot2[jj]
+            slotProbMult = slot1_prod[1] * slot2_prod[1]
+            for prod in pcfg.productions(rhs=slot1_prod[0].lhs()):
+              if len(prod.rhs()) == 2 and slot2_prod[0].lhs() == prod.rhs()[1]:
+                li.append((prod,prod.prob() * slotProbMult,(bp1, bp2)))
         chart[i][j].extend(li)
   return trees_from_chart(chart,numparses)
 
@@ -55,14 +63,16 @@ def trees_from_chart(chart, numparses):
   return trees
 
 def buildtree(chart,li,tup):
-  if tup[2] != 0:
-    li.append('(' + str(tup[0].lhs()))
-    buildtree(chart,li,chart[tup[2][0][0]][tup[2][0][1]][tup[2][0][2]])
+  t0 = tup[0]
+  t2 = tup[2]
+  if t2 != 0:
+    li.append('(' + str(t0.lhs()))
+    buildtree(chart,li,chart[t2[0][0]][t2[0][1]][t2[0][2]])
     li.append(' ')
-    buildtree(chart,li,chart[tup[2][1][0]][tup[2][1][1]][tup[2][1][2]])
+    buildtree(chart,li,chart[t2[1][0]][t2[1][1]][t2[1][2]])
     li.append(')')
   else:
-    li.append('(' + str(tup[0].lhs()) + ' ' + str(tup[0].rhs()[0]) + ')')
+    li.append('(' + str(t0.lhs()) + ' ' + str(t0.rhs()[0]) + ')')
 
 def test1(test_str):
   toy_pcfg = PCFG.fromstring("""
@@ -76,6 +86,11 @@ def test1(test_str):
 def test2():
   pcfg = main.trained_pcfg()
   return pcfg
+
+def cykTimeTesting(sentence):
+  t0 = time.time()
+  CYK(pcfg, sentence.split(" "), 10)
+  print(time.time() - t0)
 
 def print_trees(li):
   # assumes list of tuples of form (TREE, PROBABILITY)
