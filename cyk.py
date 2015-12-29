@@ -74,6 +74,27 @@ def buildtree(chart,li,tup):
   else:
     li.append('(' + str(t0.lhs()) + ' ' + str(t0.rhs()[0]) + ')')
 
+def isomorphic(t1, t2):
+  if isinstance(t1, Tree) and isinstance(t2, Tree):
+    t1Nodes = []
+    t2Nodes = []
+    for n in t1:
+      t1Nodes.append(n)
+    for n in t2:
+      t2Nodes.append(n)
+  if len(t1Nodes) != len(t2Nodes):
+    return False
+  else:
+    for i in range(len(t1Nodes)):
+      t1isTree = isinstance(t1Nodes[i], Tree)
+      t2isTree = isinstance(t2Nodes[i], Tree)
+      if t1isTree and t2isTree:
+        if len(t1Nodes[i]) != len(t2Nodes[i]):
+          return False
+      elif (not t1isTree or not t2isTree) and (t1isTree or t2isTree):
+        return False
+    return True
+
 def test1(test_str):
   toy_pcfg = PCFG.fromstring("""
   S -> A A [0.8] | A B [.1] | A S [.1]
