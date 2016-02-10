@@ -7,10 +7,9 @@ import main
 
 # PCFG : nltk.grammar.pcfg
 # words : list(strings)
-def CYK(pcfg, words, numparses=1):
+def CYK(pcfg, words, numparses=-1):
   numwords = len(words)
   chart = [[]]                # each [row][col] is a list of production tuples
-  #[ row0:[ col0:[(prod1),(prod2),(prod3)] , col1:[(prod4),(prod5),(prod6)] ], row1:[ col0:[(p1),(p2)] , col1:[(p3)] ] ]
   i = 0
   for w in words:
     chart[0].append([])       # create the new column
@@ -28,7 +27,6 @@ def CYK(pcfg, words, numparses=1):
       chart[i].append([])       # create the new column
       for k in range(i):        # used to increment through all sub-lengths when comparing previous slots of productions
         li = []
-        # iterate through all productions in each slot of [k,j] and those in [i-(k+1),j+k+1]
         slot1 = chart[k][j]
         slot2 = chart[i-(k+1)][k+(j+1)]
         for ii in range(len(slot1)):
@@ -45,7 +43,7 @@ def CYK(pcfg, words, numparses=1):
   return trees_from_chart(chart,numparses)
 
 # Returns a list of tuples (TREE, PROBABILITY)
-def trees_from_chart(chart, numparses):
+def trees_from_chart(chart, numparses=-1):
   roots = sorted(chart[len(chart)-1][0], key=lambda x : x[1], reverse=True)
   trees = []
 
@@ -73,6 +71,13 @@ def buildtree(chart,li,tup):
     li.append(')')
   else:
     li.append('(' + str(t0.lhs()) + ' ' + str(t0.rhs()[0]) + ')')
+
+def isomorphism_classes(li):
+  for i in range(len(li)):
+    for j in range(len(li)):
+      if i != j and isomorphic(li[i][0],li[j][0]):
+        li.remove(li[j]) #causes index errors
+  return li
 
 def isomorphic(t1, t2):
   if isinstance(t1, Tree) and isinstance(t2, Tree):

@@ -26,16 +26,20 @@ def trained_pcfg():
     n = 0                   # check progress of training
     if useFullTreeBank:
       tb = ptb
+    print("Counting Sentences...")
+    numSentences = len(tb.parsed_sents())
+    print("Done. Parsing corpus...")
     for t in tb.parsed_sents(): 
       if n % 200 == 0:
-        print(n)
+        print("{:.2f}% complete".format((n/numSentences)*100))
       collapse_unary(t,True)
-      chomsky_normal_form(t)
+      chomsky_normal_form(t,vertMarkov = 3)
       n = n + 1
       for p in t.productions():
         productions.append(p)
+    print("Building grammar...")
     gram = grammar.induce_pcfg(grammar.Nonterminal('S'), productions)
-    print("Trained!")
+    print("Built.")
     print("Writing the PCFG...")
     with open("pcfgcache.pkl",'wb') as output:
       pickle.dump(gram, output, -1)
