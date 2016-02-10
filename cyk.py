@@ -3,6 +3,7 @@ from nltk.tree import Tree
 from nltk.draw import draw_trees
 from nltk.treetransforms import un_chomsky_normal_form
 import time
+import math
 import main
 
 # PCFG : nltk.grammar.pcfg
@@ -39,6 +40,10 @@ def CYK(pcfg, words, numparses=-1):
             for prod in pcfg.productions(rhs=slot1_prod[0].lhs()):
               if len(prod.rhs()) == 2 and slot2_prod[0].lhs() == prod.rhs()[1]:
                 li.append((prod,prod.prob() * slotProbMult,(bp1, bp2)))
+        li.sort(key=lambda x:x[1],reverse=True)
+        l = len(li)
+        if l > 20:
+          li = li[:math.ceil(l/math.log10(l))]
         chart[i][j].extend(li)
   return trees_from_chart(chart,numparses)
 
@@ -73,11 +78,18 @@ def buildtree(chart,li,tup):
     li.append('(' + str(t0.lhs()) + ' ' + str(t0.rhs()[0]) + ')')
 
 def isomorphism_classes(li):
-  for i in range(len(li)):
-    for j in range(len(li)):
-      if i != j and isomorphic(li[i][0],li[j][0]):
-        li.remove(li[j]) #causes index errors
-  return li
+  length = len(li)
+  unique = [True for i in range(length)]
+  for i in range(length):
+    if unique[i] == True:
+      for j in range(i+1,length):
+        if isomorphic(li[i][0],li[j][0]):
+          unique[j] = False
+  isoclasses = []
+  for i in range(length):
+    if unique[i] == True:
+      isoclasses.append(li[i])
+  return isoclasses
 
 def isomorphic(t1, t2):
   if isinstance(t1, Tree) and isinstance(t2, Tree):
@@ -125,6 +137,10 @@ def print_trees(li):
     print("Tree " + str(n) + ": " + str(tup[1]))
     n = n + 1
   draw_trees(*[x[0] for x in li])
+
+def pruned_parse(pcfg, phrase):
+  t = CYK(pcfg,phrase.split(' '))
+  print_trees(isomorphism_classes(t))
 
 if __name__ == '__main__':
   pcfg = test2()
